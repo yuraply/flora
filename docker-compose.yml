@@ -1,0 +1,25 @@
+services:
+  flora:
+    container_name: flora
+    build:
+      context: .
+    # Пробрасываем порт 80 из контейнера на порт 20010 локально на VPS.
+    # Caddy обращается именно к 127.0.0.1:20010
+    ports:
+      - "127.0.0.1:20010:80"
+    # Подключаем файл с ключами
+    env_file:
+      - .env
+    # Переменные окружения (на всякий случай дублируем, но env_file главнее)
+    environment:
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL}
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - DATA_DIR=/app/data
+    # Persistent storage for SQLite database
+    volumes:
+      - flora_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  flora_data:

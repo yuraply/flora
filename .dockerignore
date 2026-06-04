@@ -1,0 +1,9 @@
+.git
+.env
+node_modules
+dist
+data
+*.log
+*.tar
+vpn
+wg0.conf

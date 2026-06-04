@@ -1,0 +1,9 @@
+node_modules/
+.env
+data/
+dist/
+*.log
+.vscode/
+*.tar
+vpn/
+wg0.conf

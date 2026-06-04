@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#f0fdf4" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" type="image/svg+xml" href="/icon.png" />
+  <link rel="manifest" href="/manifest.json">
+
+  <title>FloraLens</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            nature: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            }
+          },
+          fontFamily: {
+            serif: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #f0fdf4;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Hide scrollbar */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Simple button style - fast rendering */
+    .btn-apple-3d {
+      background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-apple-3d:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Exit button */
+    .btn-exit-apple {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+      transition: transform 0.15s ease;
+    }
+
+    .btn-exit-apple:active {
+      transform: scale(0.96);
+    }
+
+    /* Icon container - simple */
+    .icon-container-3d {
+      background: linear-gradient(180deg, #ffffff 0%, #dcfce7 100%);
+      border: 1px solid #bbf7d0;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+    }
+
+    /* Fade animation */
+    .fade-message {
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Green action button */
+    .btn-action-green {
+      background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+      border: none;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+      transition: transform 0.15s ease;
+    }
+
+    .btn-action-green:active {
+      transform: scale(0.97);
+    }
+
+    /* Simple card style - NO blur */
+    .card-neumorphic {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Care cards - simple solid backgrounds */
+    .card-care-water {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.08);
+    }
+
+    .card-care-light {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      box-shadow: 0 2px 6px rgba(245, 158, 11, 0.08);
+    }
+
+    .card-care-soil {
+      background: #fafaf9;
+      border: 1px solid #d6d3d1;
+      box-shadow: 0 2px 6px rgba(120, 113, 108, 0.08);
+    }
+
+    .card-care-temp {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      box-shadow: 0 2px 6px rgba(249, 115, 22, 0.08);
+    }
+
+    /* Health cards - solid */
+    .card-health-good {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
+    }
+
+    .card-health-bad {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
+    }
+
+    /* Fun facts card - solid dark */
+    .card-facts {
+      background: linear-gradient(180deg, #166534 0%, #14532d 100%);
+      border: 1px solid #22c55e;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Difficulty badge */
+    .badge-difficulty {
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Ozon button */
+    .btn-ozon {
+      background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+      border: none;
+      box-shadow: 0 4px 10px rgba(29, 78, 216, 0.25);
+      transition: transform 0.15s ease;
+    }
+
+    .btn-ozon:active {
+      transform: scale(0.98);
+    }
+  </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0"
+  }
+}
+</script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>

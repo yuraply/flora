@@ -1,0 +1,1997 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloraLens Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #22c55e;
+            --accent-hover: #16a34a;
+            --border: #475569;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        header h1::before {
+            content: '🌿';
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(34, 197, 94, 0.2);
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-card .sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.05));
+            border-color: var(--accent);
+        }
+
+        /* Security Center */
+        .security-center {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .security-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .security-header h3 {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .security-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-card);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .toggle-container label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            display: inline-block;
+        }
+
+        .toggle input {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+            margin: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle input:checked+.toggle-slider {
+            background-color: var(--accent);
+        }
+
+        .toggle input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .alerts-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+
+        .alert-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-type {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .alert-details {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .alert-ip {
+            font-family: monospace;
+            color: var(--info);
+        }
+
+        .alert-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn-small:hover {
+            opacity: 0.8;
+        }
+
+        .btn-block {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-resolve {
+            background: var(--accent);
+            color: white;
+        }
+
+        .no-alerts {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .alert-severity-critical {
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-severity-warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-severity-info {
+            border-left: 4px solid var(--info);
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-card h3 {
+            margin-bottom: 20px;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 220px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Tables Grid */
+        .tables-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1000px) {
+            .tables-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .table-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .table-card h3 {
+            margin-bottom: 16px;
+            font-size: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        td {
+            font-size: 0.85rem;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .ip-cell {
+            font-family: monospace;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .country-flag {
+            font-size: 1.1rem;
+        }
+
+        .ip-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .ip-status.ok {
+            background: var(--accent);
+        }
+
+        .ip-status.warning {
+            background: var(--warning);
+        }
+
+        .ip-status.blocked {
+            background: var(--danger);
+        }
+
+        .status-200,
+        .status-201 {
+            color: var(--accent);
+        }
+
+        .status-400,
+        .status-401,
+        .status-403,
+        .status-404 {
+            color: var(--warning);
+        }
+
+        .status-500,
+        .status-502,
+        .status-503 {
+            color: var(--danger);
+        }
+
+        .refresh-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .refresh-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .last-update {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .requests-table-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .requests-table-wrapper::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .requests-table-wrapper::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+            border-radius: 4px;
+        }
+
+        .requests-table-wrapper::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .method-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .method-GET {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .method-POST {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .method-PUT {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .method-DELETE {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .method-HEAD,
+        .method-OPTIONS {
+            background: rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+        }
+
+        /* Suspicious request styles */
+        .suspicious-row {
+            background: rgba(239, 68, 68, 0.1) !important;
+            border-left: 3px solid var(--danger);
+        }
+
+        .suspicious-row:hover {
+            background: rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .path-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: help;
+        }
+
+        .path-danger {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        /* Method badge hover effect */
+        .method-badge {
+            cursor: help;
+            transition: transform 0.1s;
+        }
+
+        .method-badge:hover {
+            transform: scale(1.05);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .metrics-gauge {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .gauge {
+            text-align: center;
+        }
+
+        .gauge-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .gauge-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* Telegram Config Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid var(--border);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .config-btn {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .config-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .blocked-count {
+            background: var(--danger);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+
+        .alerts-count {
+            background: var(--warning);
+            color: black;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        /* Detail Popup */
+        .detail-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .detail-popup.show {
+            display: flex;
+        }
+
+        .detail-popup-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 70vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+
+        .detail-popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .detail-popup-header h3 {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-popup-close {
+            background: var(--bg-card);
+            border: none;
+            color: var(--text-primary);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .detail-popup-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .detail-list {
+            list-style: none;
+        }
+
+        .detail-list li {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-list li:last-child {
+            border-bottom: none;
+        }
+
+        .detail-list .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .detail-list .value {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .stat-card.clickable {
+            cursor: pointer;
+        }
+
+        .stat-card.clickable:hover {
+            border-color: var(--accent);
+        }
+
+        /* IP Classification Colors */
+        .ip-row-green {
+            border-left: 4px solid #22c55e;
+        }
+
+        .ip-row-yellow {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .ip-row-red {
+            border-left: 4px solid #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .classification-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .classification-badge.green {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .classification-badge.yellow {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .classification-badge.red {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .ip-clickable {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .ip-clickable:hover {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+
+        /* IP Detail Popup */
+        .ip-detail-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ip-detail-popup.show {
+            display: flex;
+        }
+
+        .ip-detail-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+
+        .ip-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ip-detail-header h3 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ip-detail-section {
+            margin-bottom: 20px;
+        }
+
+        .ip-detail-section h4 {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ip-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .ip-detail-item {
+            background: var(--bg-card);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .ip-detail-item .label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .ip-detail-item .value {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .ip-history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .ip-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .classification-legend {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .legend-dot.green {
+            background: #22c55e;
+        }
+
+        .legend-dot.yellow {
+            background: #f59e0b;
+        }
+
+        .legend-dot.red {
+            background: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>FloraLens Dashboard</h1>
+            <div class="header-controls">
+                <span class="last-update" id="lastUpdate">Загрузка...</span>
+                <button class="refresh-btn" id="refreshBtn" onclick="loadData()">🔄 Обновить</button>
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span>Online</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card highlight clickable" onclick="showDetailPopup('ai')">
+                <div class="label">🤖 AI-запросов</div>
+                <div class="value" id="aiRequests">-</div>
+                <div class="sub" id="aiRequestsToday">Сегодня: -</div>
+            </div>
+            <div class="stat-card clickable" onclick="showDetailPopup('photos')">
+                <div class="label">📷 С фотографиями</div>
+                <div class="value" id="requestsWithImages">-</div>
+            </div>
+            <div class="stat-card clickable" onclick="showDetailPopup('ips')">
+                <div class="label">🌐 Уникальных IP</div>
+                <div class="value" id="uniqueIps">-</div>
+                <div class="sub" id="uniqueIpsToday">Сегодня: -</div>
+            </div>
+            <div class="stat-card clickable" onclick="showDetailPopup('response')">
+                <div class="label">⚡ Ср. время ответа</div>
+                <div class="value" id="avgResponseTime">-</div>
+                <div class="sub">миллисекунд</div>
+            </div>
+            <div class="stat-card clickable" onclick="showDetailPopup('total')">
+                <div class="label">📊 Всего запросов</div>
+                <div class="value" id="totalRequests">-</div>
+                <div class="sub" id="requestsToday">Сегодня: -</div>
+            </div>
+            <div class="stat-card clickable" onclick="showDetailPopup('week')">
+                <div class="label">📅 За 7 дней</div>
+                <div class="value" id="requestsWeek">-</div>
+            </div>
+        </div>
+
+        <!-- Security Center -->
+        <div class="security-center">
+            <div class="security-header">
+                <h3>
+                    🔒 Security Center
+                    <span class="alerts-count" id="alertsCount">0</span>
+                    <span class="blocked-count" id="blockedCount" style="display: none;">0 заблокировано</span>
+                </h3>
+                <div class="security-status">
+                    <button class="config-btn" onclick="openTelegramConfig()">
+                        📱 Telegram
+                    </button>
+                    <div class="toggle-container">
+                        <label>Автоблокировка</label>
+                        <div class="toggle">
+                            <input type="checkbox" id="autoBlockToggle" onchange="toggleAutoBlock()">
+                            <span class="toggle-slider"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs for Alerts / Blocked -->
+            <div class="tabs" style="margin-bottom: 12px;">
+                <button class="tab active" id="tabAlerts" onclick="showSecurityTab('alerts')">⚠️ Алерты</button>
+                <button class="tab" id="tabBlocked" onclick="showSecurityTab('blocked')">🚫 Заблокированные <span
+                        id="blockedTabCount"></span></button>
+            </div>
+
+            <div class="alerts-list" id="alertsList">
+                <div class="no-alerts">✅ Нет активных предупреждений</div>
+            </div>
+
+            <div class="alerts-list" id="blockedList" style="display: none;">
+                <div class="no-alerts">✅ Нет заблокированных IP</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3>📈 AI-запросы за 24 часа</h3>
+                <div class="chart-container">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>📊 Запросы за 30 дней</h3>
+                <div class="chart-container">
+                    <canvas id="dailyChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>💻 CPU / RAM</h3>
+                <div class="metrics-gauge">
+                    <div class="gauge">
+                        <div class="gauge-value" id="cpuValue">-</div>
+                        <div class="gauge-label">CPU %</div>
+                    </div>
+                    <div class="gauge">
+                        <div class="gauge-value" id="ramValue">-</div>
+                        <div class="gauge-label">RAM (MB)</div>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 120px;">
+                    <canvas id="metricsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables -->
+        <div class="tables-grid">
+            <div class="table-card">
+                <h3>🌍 Топ IP-адресов</h3>
+                <div class="classification-legend">
+                    <div class="legend-item"><span class="legend-dot green"></span> Технический</div>
+                    <div class="legend-item"><span class="legend-dot yellow"></span> Пользователь</div>
+                    <div class="legend-item"><span class="legend-dot red"></span> Подозрительный</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>IP</th>
+                            <th>Страна</th>
+                            <th>Запросов</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topIpsTable">
+                        <tr>
+                            <td colspan="4" class="loading">Загрузка...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3>📋 Последние запросы</h3>
+                    <div class="tabs">
+                        <button class="tab active" data-filter="all" onclick="setFilter('all')">Все</button>
+                        <button class="tab" data-filter="api" onclick="setFilter('api')">API</button>
+                    </div>
+                </div>
+                <div class="requests-table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Время</th>
+                                <th>IP</th>
+                                <th>Метод</th>
+                                <th>Путь</th>
+                                <th>Статус</th>
+                                <th>Время (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentRequestsTable">
+                            <tr>
+                                <td colspan="6" class="loading">Загрузка...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            FloraLens Monitoring Dashboard | Данные хранятся 60 дней
+        </footer>
+    </div>
+
+    <!-- Telegram Config Modal -->
+    <div class="modal" id="telegramModal">
+        <div class="modal-content">
+            <h3>📱 Настройка Telegram уведомлений</h3>
+            <div class="form-group">
+                <label>Bot Token (от @BotFather)</label>
+                <input type="text" id="telegramToken" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11">
+            </div>
+            <div class="form-group">
+                <label>Chat ID</label>
+                <input type="text" id="telegramChatId" placeholder="123456789">
+            </div>
+            <div class="toggle-container" style="margin-top: 16px;">
+                <label>Включить уведомления</label>
+                <div class="toggle">
+                    <input type="checkbox" id="telegramEnabled">
+                    <span class="toggle-slider"></span>
+                </div>
+            </div>
+            <p style="margin-top: 16px; font-size: 0.85rem; color: var(--text-secondary);">
+                ℹ️ Уведомления отправляются только для <strong style="color: #ef4444;">подозрительных IP</strong>
+                (сканеры, брутфорс).
+            </p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="testTelegram()" id="testTelegramBtn">🧪 Тест</button>
+                <button class="btn btn-secondary" onclick="closeTelegramConfig()">Отмена</button>
+                <button class="btn btn-primary" onclick="saveTelegramConfig()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Popup -->
+    <div class="detail-popup" id="detailPopup" onclick="closeDetailPopup(event)">
+        <div class="detail-popup-content" onclick="event.stopPropagation()">
+            <div class="detail-popup-header">
+                <h3 id="detailPopupTitle">Детали</h3>
+                <button class="detail-popup-close" onclick="closeDetailPopup()">✕</button>
+            </div>
+            <ul class="detail-list" id="detailPopupList">
+            </ul>
+        </div>
+    </div>
+
+    <!-- IP Detail Popup -->
+    <div class="ip-detail-popup" id="ipDetailPopup" onclick="closeIpDetailPopup(event)">
+        <div class="ip-detail-content" onclick="event.stopPropagation()">
+            <div class="ip-detail-header">
+                <h3 id="ipDetailTitle">🌐 IP Details</h3>
+                <button class="detail-popup-close" onclick="closeIpDetailPopup()">✕</button>
+            </div>
+            <div id="ipDetailContent">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let hourlyChart, dailyChart, metricsChart;
+        let currentFilter = 'all';
+        let geoCache = {};
+        let cachedStats = null;
+
+        // Detail popup functions
+        function showDetailPopup(type) {
+            if (!cachedStats) return;
+
+            const popup = document.getElementById('detailPopup');
+            const title = document.getElementById('detailPopupTitle');
+            const list = document.getElementById('detailPopupList');
+
+            let titleText = '';
+            let items = [];
+
+            switch (type) {
+                case 'ai':
+                    titleText = '🤖 AI-запросы';
+                    items = [
+                        { label: 'Всего AI-запросов', value: cachedStats.aiRequests },
+                        { label: 'Сегодня', value: cachedStats.aiRequestsToday },
+                        { label: 'С фотографиями', value: cachedStats.requestsWithImages },
+                        { label: 'Только текст', value: cachedStats.aiRequests - cachedStats.requestsWithImages },
+                        { label: '% успешных', value: '~99%' }
+                    ];
+                    break;
+                case 'photos':
+                    titleText = '📷 Запросы с фотографиями';
+                    items = [
+                        { label: 'Всего с фото', value: cachedStats.requestsWithImages },
+                        { label: '% от AI-запросов', value: cachedStats.aiRequests > 0 ? Math.round(cachedStats.requestsWithImages / cachedStats.aiRequests * 100) + '%' : '0%' },
+                        { label: 'Ср. размер фото', value: '~500 KB' }
+                    ];
+                    break;
+                case 'ips':
+                    titleText = '🌐 Уникальные IP-адреса';
+                    items = [
+                        { label: 'Всего уникальных', value: cachedStats.uniqueIps },
+                        { label: 'Сегодня новых', value: cachedStats.uniqueIpsToday },
+                        { label: 'Топ-1 IP', value: cachedStats.topIps?.[0]?.ip || '-' },
+                        { label: 'Запросов от топ-1', value: cachedStats.topIps?.[0]?.count || '-' }
+                    ];
+                    break;
+                case 'response':
+                    titleText = '⚡ Время ответа';
+                    items = [
+                        { label: 'Среднее время', value: cachedStats.avgResponseTime + ' мс' },
+                        { label: 'Цель', value: '< 500 мс' },
+                        { label: 'Статус', value: cachedStats.avgResponseTime < 500 ? '✅ Отлично' : '⚠️ Медленно' }
+                    ];
+                    break;
+                case 'total':
+                    titleText = '📊 Всего запросов';
+                    items = [
+                        { label: 'Всего запросов', value: cachedStats.totalRequests },
+                        { label: 'Сегодня', value: cachedStats.requestsToday },
+                        { label: 'AI-запросов', value: cachedStats.aiRequests },
+                        { label: 'Статические файлы', value: cachedStats.totalRequests - cachedStats.aiRequests }
+                    ];
+                    break;
+                case 'week':
+                    titleText = '📅 Статистика за 7 дней';
+                    items = [
+                        { label: 'Запросов за неделю', value: cachedStats.requestsWeek },
+                        { label: 'В среднем в день', value: Math.round(cachedStats.requestsWeek / 7) },
+                        { label: 'Активных алертов', value: cachedStats.activeAlerts || 0 },
+                        { label: 'Заблокировано IP', value: cachedStats.blockedIpsCount || 0 }
+                    ];
+                    break;
+            }
+
+            title.textContent = titleText;
+            list.innerHTML = items.map(item => `
+                <li>
+                    <span class="label">${item.label}</span>
+                    <span class="value">${item.value}</span>
+                </li>
+            `).join('');
+
+            popup.classList.add('show');
+        }
+
+        function closeDetailPopup(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('detailPopup').classList.remove('show');
+        }
+
+        async function loadData() {
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Загрузка...';
+
+            try {
+                const [statsRes, requestsRes, alertsRes, settingsRes, blockedRes] = await Promise.all([
+                    fetch('/admin/api/stats'),
+                    fetch('/admin/api/requests?apiOnly=' + (currentFilter === 'api')),
+                    fetch('/admin/api/security/alerts'),
+                    fetch('/admin/api/security/settings'),
+                    fetch('/admin/api/security/blocked')
+                ]);
+
+                const stats = await statsRes.json();
+                const requests = await requestsRes.json();
+                const alerts = await alertsRes.json();
+                const settings = await settingsRes.json();
+                const blocked = await blockedRes.json();
+
+                cachedStats = stats;  // Cache for popup details
+                updateStats(stats);
+                updateCharts(stats);
+                updateTopIps(stats.topIps);
+                updateRecentRequests(requests);
+                updateAlerts(alerts);
+                updateSettings(settings);
+                updateBlockedCount(blocked.length);
+                updateBlockedList(blocked);
+
+                document.getElementById('lastUpdate').textContent =
+                    'Обновлено: ' + new Date().toLocaleTimeString('ru-RU');
+            } catch (err) {
+                console.error('Error loading data:', err);
+                document.getElementById('lastUpdate').textContent = 'Ошибка загрузки';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 Обновить';
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('totalRequests').textContent = stats.totalRequests.toLocaleString('ru-RU');
+            document.getElementById('requestsToday').textContent = 'Сегодня: ' + stats.requestsToday.toLocaleString('ru-RU');
+            document.getElementById('requestsWeek').textContent = stats.requestsWeek.toLocaleString('ru-RU');
+            document.getElementById('uniqueIps').textContent = stats.uniqueIps.toLocaleString('ru-RU');
+            document.getElementById('uniqueIpsToday').textContent = 'Сегодня: ' + stats.uniqueIpsToday;
+            document.getElementById('avgResponseTime').textContent = stats.avgResponseTime;
+            document.getElementById('requestsWithImages').textContent = stats.requestsWithImages.toLocaleString('ru-RU');
+            document.getElementById('aiRequests').textContent = stats.aiRequests.toLocaleString('ru-RU');
+            document.getElementById('aiRequestsToday').textContent = 'Сегодня: ' + stats.aiRequestsToday;
+
+            document.getElementById('cpuValue').textContent = stats.currentMetrics.cpu_percent?.toFixed(1) || '0';
+            document.getElementById('ramValue').textContent = stats.currentMetrics.memory_mb?.toFixed(0) || '0';
+        }
+
+        function updateCharts(stats) {
+            // Hourly chart
+            const hourlyLabels = stats.requestsPerHour.map(r => r.hour.split(' ')[1]);
+            const hourlyData = stats.requestsPerHour.map(r => r.count);
+
+            if (hourlyChart) hourlyChart.destroy();
+            hourlyChart = new Chart(document.getElementById('hourlyChart'), {
+                type: 'bar',
+                data: {
+                    labels: hourlyLabels,
+                    datasets: [{
+                        label: 'Запросов',
+                        data: hourlyData,
+                        backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            // Daily chart
+            const dailyLabels = stats.requestsPerDay.map(r => r.day.slice(5));
+            const dailyData = stats.requestsPerDay.map(r => r.count);
+
+            if (dailyChart) dailyChart.destroy();
+            dailyChart = new Chart(document.getElementById('dailyChart'), {
+                type: 'line',
+                data: {
+                    labels: dailyLabels,
+                    datasets: [{
+                        label: 'Запросов',
+                        data: dailyData,
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            // Metrics chart
+            const metricsLabels = stats.metricsHistory.map(m => m.time.split(' ')[1]);
+            const cpuData = stats.metricsHistory.map(m => m.cpu_percent);
+            const ramData = stats.metricsHistory.map(m => m.memory_mb);
+
+            if (metricsChart) metricsChart.destroy();
+            metricsChart = new Chart(document.getElementById('metricsChart'), {
+                type: 'line',
+                data: {
+                    labels: metricsLabels,
+                    datasets: [
+                        {
+                            label: 'CPU %',
+                            data: cpuData,
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'RAM (MB)',
+                            data: ramData,
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: '#94a3b8', boxWidth: 12 }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' }, position: 'left' },
+                        y1: { beginAtZero: true, grid: { display: false }, ticks: { color: '#94a3b8' }, position: 'right' },
+                        x: { display: false }
+                    }
+                }
+            });
+        }
+
+        // IP classifications cache
+        let classificationsCache = {};
+
+        async function updateTopIps(topIps) {
+            const tbody = document.getElementById('topIpsTable');
+            if (!topIps || topIps.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">Нет данных</td></tr>';
+                return;
+            }
+
+            // Fetch classifications
+            try {
+                const classRes = await fetch('/admin/api/security/classifications');
+                const classifications = await classRes.json();
+                classifications.forEach(c => classificationsCache[c.ip] = c);
+            } catch (e) {
+                console.error('Error fetching classifications:', e);
+            }
+
+            const rows = await Promise.all(topIps.map(async ip => {
+                let geo = geoCache[ip.ip];
+                if (!geo) {
+                    try {
+                        const res = await fetch(`/admin/api/security/geo/${ip.ip}`);
+                        geo = await res.json();
+                        geoCache[ip.ip] = geo;
+                    } catch {
+                        geo = { country: 'Unknown', country_code: '??' };
+                    }
+                }
+
+                const flag = getFlag(geo.country_code);
+                const classification = classificationsCache[ip.ip];
+                const classType = classification?.classification || 'user';
+                const ownerType = classification?.owner_type || 'unknown';
+
+                // Row class based on classification
+                let rowClass = 'ip-row-yellow';
+                if (classType === 'technical') rowClass = 'ip-row-green';
+                if (classType === 'suspicious') rowClass = 'ip-row-red';
+
+                // Owner type label
+                const ownerLabels = {
+                    company: '🏢',
+                    user: '👤',
+                    bot: '🤖',
+                    hacker: '💀',
+                    unknown: '❓'
+                };
+                const ownerEmoji = ownerLabels[ownerType] || '❓';
+
+                return `
+                    <tr class="${rowClass}">
+                        <td class="ip-cell">
+                            <span class="ip-clickable" onclick="showIpDetails('${ip.ip}')">${ip.ip}</span>
+                            <span title="${ownerType}">${ownerEmoji}</span>
+                        </td>
+                        <td><span class="country-flag">${flag}</span> ${geo.country || 'Unknown'}</td>
+                        <td>${ip.count}</td>
+                        <td>
+                            <button class="btn-small btn-block" onclick="blockIp('${ip.ip}')">🚫</button>
+                        </td>
+                    </tr>
+                `;
+            }));
+
+            tbody.innerHTML = rows.join('');
+        }
+
+        function getFlag(countryCode) {
+            if (!countryCode || countryCode === '??' || countryCode.length !== 2) return '🌐';
+            const codePoints = countryCode.toUpperCase().split('').map(char => 127397 + char.charCodeAt(0));
+            return String.fromCodePoint(...codePoints);
+        }
+
+        // Информация о методах и путях
+        const METHOD_INFO = {
+            'GET': { desc: '✅ Получение данных — безопасный запрос', safe: true },
+            'POST': { desc: '📤 Отправка данных (фото, формы) — основной метод AI-запросов', safe: true },
+            'PUT': { desc: '📝 Обновление данных', safe: true },
+            'DELETE': { desc: '🗑️ Удаление данных', safe: false },
+            'HEAD': { desc: '📋 Проверка доступности — обычно боты/мониторинг', safe: true },
+            'OPTIONS': { desc: '🔧 Технический запрос (CORS preflight)', safe: true }
+        };
+
+        const PATH_INFO = {
+            '/api/identify': { desc: '🌿 AI-запрос на распознавание растения', type: 'ai', safe: true },
+            '/api/health': { desc: '💚 Проверка здоровья сервера', type: 'tech', safe: true },
+            '/admin': { desc: '🔐 Админ-панель', type: 'admin', safe: true },
+            '/favicon.ico': { desc: '🖼️ Иконка сайта — техническое', type: 'tech', safe: true },
+            '/.env': { desc: '🔴 ОПАСНО! Попытка украсть секреты', type: 'hack', safe: false },
+            '/wp-admin': { desc: '🔴 Сканер WordPress — подозрительно', type: 'hack', safe: false },
+            '/phpmyadmin': { desc: '🔴 Сканер баз данных — подозрительно', type: 'hack', safe: false },
+            '/.git': { desc: '🔴 Попытка доступа к Git — подозрительно', type: 'hack', safe: false }
+        };
+
+        function getPathInfo(path) {
+            // Точное совпадение
+            if (PATH_INFO[path]) return PATH_INFO[path];
+            // Частичное совпадение
+            for (const [key, info] of Object.entries(PATH_INFO)) {
+                if (path.includes(key)) return info;
+            }
+            // По умолчанию
+            if (path.startsWith('/api/')) return { desc: '📡 API запрос', type: 'api', safe: true };
+            if (path.match(/\.(js|css|png|jpg|svg|woff|ico)$/)) return { desc: '📦 Статический файл', type: 'tech', safe: true };
+            return { desc: '📄 Страница сайта', type: 'page', safe: true };
+        }
+
+        function updateRecentRequests(requests) {
+            const tbody = document.getElementById('recentRequestsTable');
+            if (!requests || requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">Нет данных</td></tr>';
+                return;
+            }
+            tbody.innerHTML = requests.map(req => {
+                const methodInfo = METHOD_INFO[req.method] || { desc: 'Неизвестный метод', safe: true };
+                const pathInfo = getPathInfo(req.path);
+                const rowClass = !pathInfo.safe ? 'suspicious-row' : '';
+
+                return `
+                <tr class="${rowClass}">
+                    <td>${new Date(req.timestamp).toLocaleString('ru-RU')}</td>
+                    <td class="ip-cell">${req.ip}</td>
+                    <td>
+                        <span class="method-badge method-${req.method}" title="${methodInfo.desc}">${req.method}</span>
+                    </td>
+                    <td title="${pathInfo.desc}" class="path-cell ${!pathInfo.safe ? 'path-danger' : ''}">${req.path}</td>
+                    <td class="status-${req.status_code}">${req.status_code}</td>
+                    <td>${req.response_time_ms}</td>
+                </tr>
+            `}).join('');
+        }
+
+        function updateAlerts(alerts) {
+            const list = document.getElementById('alertsList');
+            const count = document.getElementById('alertsCount');
+
+            count.textContent = alerts.length;
+            count.style.display = alerts.length > 0 ? 'inline' : 'none';
+
+            if (!alerts || alerts.length === 0) {
+                list.innerHTML = '<div class="no-alerts">✅ Нет активных предупреждений</div>';
+                return;
+            }
+
+            const icons = {
+                rate_limit: '🚨',
+                brute_force: '🔴',
+                scanner: '⚠️',
+                suspicious_ua: '🟠',
+                error_spike: '🟡'
+            };
+
+            list.innerHTML = alerts.map(alert => `
+                <div class="alert-item alert-severity-${alert.severity}">
+                    <span class="alert-icon">${icons[alert.type] || '⚠️'}</span>
+                    <div class="alert-content">
+                        <div class="alert-type">${alert.type.replace(/_/g, ' ').toUpperCase()}</div>
+                        <div class="alert-details">
+                            <span class="alert-ip">${alert.ip}</span> — ${alert.details}
+                        </div>
+                        <div class="alert-time">${new Date(alert.timestamp).toLocaleString('ru-RU')}</div>
+                    </div>
+                    <div class="alert-actions">
+                        <button class="btn-small btn-block" onclick="blockIp('${alert.ip}')">🚫 Блок</button>
+                        <button class="btn-small btn-resolve" onclick="resolveAlert(${alert.id})">✓</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateSettings(settings) {
+            document.getElementById('autoBlockToggle').checked = settings.auto_block_enabled === 'true';
+            document.getElementById('telegramEnabled').checked = settings.telegram_enabled === 'true';
+            document.getElementById('telegramToken').value = settings.telegram_bot_token || '';
+            document.getElementById('telegramChatId').value = settings.telegram_chat_id || '';
+        }
+
+        function updateBlockedCount(count) {
+            const badge = document.getElementById('blockedCount');
+            if (count > 0) {
+                badge.textContent = count + ' заблокировано';
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        async function toggleAutoBlock() {
+            const enabled = document.getElementById('autoBlockToggle').checked;
+            await fetch('/admin/api/security/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: 'auto_block_enabled', value: enabled.toString() })
+            });
+        }
+
+        async function blockIp(ip) {
+            if (!confirm(`Заблокировать IP ${ip}?`)) return;
+            await fetch('/admin/api/security/block', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip, reason: 'Manually blocked from dashboard' })
+            });
+            loadData();
+        }
+
+        async function resolveAlert(id) {
+            await fetch(`/admin/api/security/alerts/${id}/resolve`, { method: 'POST' });
+            loadData();
+        }
+
+        function showSecurityTab(tab) {
+            const alertsList = document.getElementById('alertsList');
+            const blockedList = document.getElementById('blockedList');
+            const tabAlerts = document.getElementById('tabAlerts');
+            const tabBlocked = document.getElementById('tabBlocked');
+
+            if (tab === 'alerts') {
+                alertsList.style.display = 'block';
+                blockedList.style.display = 'none';
+                tabAlerts.classList.add('active');
+                tabBlocked.classList.remove('active');
+            } else {
+                alertsList.style.display = 'none';
+                blockedList.style.display = 'block';
+                tabAlerts.classList.remove('active');
+                tabBlocked.classList.add('active');
+            }
+        }
+
+        function updateBlockedList(blocked) {
+            const list = document.getElementById('blockedList');
+            const countSpan = document.getElementById('blockedTabCount');
+
+            countSpan.textContent = blocked.length > 0 ? `(${blocked.length})` : '';
+
+            if (!blocked || blocked.length === 0) {
+                list.innerHTML = '<div class="no-alerts">✅ Нет заблокированных IP</div>';
+                return;
+            }
+
+            list.innerHTML = blocked.map(item => `
+                <div class="alert-item alert-severity-warning">
+                    <span class="alert-icon">🚫</span>
+                    <div class="alert-content">
+                        <div class="alert-type">ЗАБЛОКИРОВАН</div>
+                        <div class="alert-details">
+                            <span class="alert-ip">${item.ip}</span> — ${item.reason}
+                        </div>
+                        <div class="alert-time">${new Date(item.blocked_at).toLocaleString('ru-RU')} ${item.auto_blocked ? '(авто)' : '(вручную)'}</div>
+                    </div>
+                    <div class="alert-actions">
+                        <button class="btn-small btn-resolve" onclick="unblockIp('${item.ip}')">✓ Разблокировать</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function unblockIp(ip) {
+            if (!confirm(`Разблокировать IP ${ip}?`)) return;
+            await fetch('/admin/api/security/unblock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ip })
+            });
+            loadData();
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.filter === filter);
+            });
+            loadData();
+        }
+
+        function openTelegramConfig() {
+            document.getElementById('telegramModal').classList.add('show');
+        }
+
+        function closeTelegramConfig() {
+            document.getElementById('telegramModal').classList.remove('show');
+        }
+
+        async function saveTelegramConfig() {
+            const token = document.getElementById('telegramToken').value;
+            const chatId = document.getElementById('telegramChatId').value;
+            const enabled = document.getElementById('telegramEnabled').checked;
+
+            await Promise.all([
+                fetch('/admin/api/security/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: 'telegram_bot_token', value: token })
+                }),
+                fetch('/admin/api/security/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: 'telegram_chat_id', value: chatId })
+                }),
+                fetch('/admin/api/security/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: 'telegram_enabled', value: enabled.toString() })
+                })
+            ]);
+
+            closeTelegramConfig();
+            alert('Настройки Telegram сохранены!');
+        }
+
+        async function testTelegram() {
+            const btn = document.getElementById('testTelegramBtn');
+            btn.disabled = true;
+            btn.textContent = '✉️ Отправка...';
+
+            try {
+                // Save settings first
+                await saveTelegramConfig();
+
+                const res = await fetch('/admin/api/security/telegram/test', { method: 'POST' });
+                const result = await res.json();
+
+                if (result.success) {
+                    alert('✅ Тестовое сообщение отправлено! Проверьте Telegram.');
+                } else {
+                    alert('❌ Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+                }
+            } catch (err) {
+                alert('❌ Ошибка сети: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🧪 Тест';
+            }
+        }
+
+        async function showIpDetails(ip) {
+            const popup = document.getElementById('ipDetailPopup');
+            const title = document.getElementById('ipDetailTitle');
+            const content = document.getElementById('ipDetailContent');
+
+            title.textContent = `🌐 ${ip}`;
+            content.innerHTML = '<div class="loading">Загрузка...</div>';
+            popup.classList.add('show');
+
+            try {
+                const res = await fetch(`/admin/api/security/ip/${ip}`);
+                const data = await res.json();
+
+                if (res.ok) {
+                    const classLabels = {
+                        technical: { emoji: '🟢', label: 'Технический' },
+                        user: { emoji: '🟡', label: 'Пользователь' },
+                        suspicious: { emoji: '🔴', label: 'Подозрительный' },
+                        unknown: { emoji: '⚪', label: 'Неизвестно' }
+                    };
+
+                    const ownerLabels = {
+                        company: '🏢 Компания',
+                        user: '👤 Пользователь',
+                        bot: '🤖 Бот/Краулер',
+                        hacker: '💀 Хакер/Сканер',
+                        unknown: '❓ Неизвестно'
+                    };
+
+                    const cls = data.classification;
+                    const clsInfo = classLabels[cls.classification] || classLabels.unknown;
+                    const ownerInfo = ownerLabels[cls.owner_type] || ownerLabels.unknown;
+                    const flag = getFlag(data.geo?.country_code);
+
+                    let html = `
+                        <div class="ip-detail-section">
+                            <h4>📍 Информация</h4>
+                            <div class="ip-detail-grid">
+                                <div class="ip-detail-item">
+                                    <div class="label">Страна</div>
+                                    <div class="value">${flag} ${data.geo?.country || 'Unknown'}</div>
+                                </div>
+                                <div class="ip-detail-item">
+                                    <div class="label">Город</div>
+                                    <div class="value">${data.geo?.city || '-'}</div>
+                                </div>
+                                <div class="ip-detail-item">
+                                    <div class="label">Классификация</div>
+                                    <div class="value">${clsInfo.emoji} ${clsInfo.label}</div>
+                                </div>
+                                <div class="ip-detail-item">
+                                    <div class="label">Тип владельца</div>
+                                    <div class="value">${ownerInfo}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ip-detail-section">
+                            <h4>📊 Статистика</h4>
+                            <div class="ip-detail-grid">
+                                <div class="ip-detail-item">
+                                    <div class="label">Всего запросов</div>
+                                    <div class="value">${cls.total_requests || 0}</div>
+                                </div>
+                                <div class="ip-detail-item">
+                                    <div class="label">AI-запросы</div>
+                                    <div class="value">${cls.ai_requests || 0}</div>
+                                </div>
+                                <div class="ip-detail-item">
+                                    <div class="label">Подозрительные</div>
+                                    <div class="value" style="color: ${cls.suspicious_requests > 0 ? '#ef4444' : 'inherit'}">${cls.suspicious_requests || 0}</div>
+                                </div>
+                                <div class="ip-detail-item">
+                                    <div class="label">Последний путь</div>
+                                    <div class="value" style="font-size: 0.8rem; word-break: break-all;">${cls.last_path || '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Block status
+                    if (data.isBlocked) {
+                        html += `
+                            <div class="ip-detail-section">
+                                <div class="alert-item alert-severity-critical" style="margin: 0;">
+                                    <span class="alert-icon">🚫</span>
+                                    <div class="alert-content">
+                                        <div class="alert-type">ЗАБЛОКИРОВАН</div>
+                                        <div class="alert-details">${data.blockedInfo?.reason || ''}</div>
+                                    </div>
+                                    <button class="btn-small btn-resolve" onclick="unblockIp('${ip}'); closeIpDetailPopup();">✓ Разблокировать</button>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div style="margin-top: 16px;">
+                                <button class="btn btn-block" style="width: 100%;" onclick="blockIp('${ip}'); closeIpDetailPopup();">🚫 Заблокировать IP</button>
+                            </div>
+                        `;
+                    }
+
+                    // Recent requests
+                    if (data.recentRequests && data.recentRequests.length > 0) {
+                        html += `
+                            <div class="ip-detail-section">
+                                <h4>📋 Последние запросы</h4>
+                                <div class="ip-history-list">
+                                    ${data.recentRequests.slice(0, 10).map(req => `
+                                        <div class="ip-history-item">
+                                            <span><span class="method-badge method-${req.method}">${req.method}</span> ${req.path.substring(0, 30)}</span>
+                                            <span class="status-${req.status_code}">${req.status_code}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<div class="no-alerts">❓ Данные не найдены</div>';
+                }
+            } catch (err) {
+                content.innerHTML = `<div class="no-alerts">❌ Ошибка: ${err.message}</div>`;
+            }
+        }
+
+        function closeIpDetailPopup(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('ipDetailPopup').classList.remove('show');
+        }
+
+        // Auto-refresh every 60 seconds
+        setInterval(loadData, 60000);
+
+        // Initial load
+        loadData();
+    </script>
+</body>
+
+</html>
