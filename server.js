@@ -230,6 +230,15 @@ function aiRateLimit(req, res, next) {
     next();
 }
 
+function isSuspiciousFallbackPath(requestPath) {
+    const normalizedPath = requestPath.toLowerCase();
+    return normalizedPath.startsWith('/.env')
+        || normalizedPath.startsWith('/.git')
+        || normalizedPath.startsWith('/wp-')
+        || normalizedPath.includes('/wp-')
+        || normalizedPath.endsWith('.php');
+}
+
 app.get('/api/test', basicAuth, async (req, res) => {
     try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -379,6 +388,10 @@ ${PLANT_JSON_SCHEMA}`;
 
 // Catch-all for SPA
 app.get('*', (req, res) => {
+    if (isSuspiciousFallbackPath(req.path)) {
+        return res.status(404).send('Not found');
+    }
+
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
